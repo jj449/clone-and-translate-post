@@ -217,20 +217,21 @@ if ( is_super_admin()) {
     }
     echo "<span id='sp_api_key' style='display:none;'>" .   $api_key  ."</span>" ; 
 
-    $google_trans_lan_list_url ="https://wa.hauchat.com/livecam/get_g_trans_lan_list.php" ; 
+    //change json source from url to file  
+       $google_trans_lan_list_json =  file_get_contents(ABSPATH . 'wp-content/plugins/clone-and-translate-post/google_lan_code_list.json') ; 
+
+      
+      /*  
+       $google_trans_lan_list_url ="https://wa.hauchat.com/livecam/get_g_trans_lan_list.php" ; 
       $response =  wp_remote_get($google_trans_lan_list_url);
-
-      //$response =  file_get_contents($google_trans_lan_list_url);
-     // echo  $response ; 
-     // exit ;
-
-
+      $response =  file_get_contents($google_trans_lan_list_url);
       if ( is_array( $response ) ) {
           $google_trans_lan_list_json = $response['body'];
       } else {
          //echo "not array" . "<br>" ; 
       }
-     // echo "google_trans_lan_list_json=" .   $google_trans_lan_list_json   ."<br>" ; 
+      */
+     
 
       $arr = json_decode($google_trans_lan_list_json,true);
      //echo "arr length=" .  count($arr) . "<br>";
@@ -363,9 +364,9 @@ var new_post_id=0 ;
            // so the msg here can't be used 
 
           
-           alert("old id=" + $("#sp_post_id").text()) ;
+         //  alert("old id=" + $("#sp_post_id").text()) ;
            new_post_id=  Number($("#sp_latest_id").text() ) + 1 ;   
-            alert("new id=" + new_post_id) ;
+           // alert("new id=" + new_post_id) ;
            $("#btn_goto_new").show() ; 
            var done_img = "<?php echo plugin_dir_url( __FILE__ ) . "done.png" ; ?>" ; 
            $("#img_processing").attr("src",done_img);
