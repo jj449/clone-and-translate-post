@@ -1,25 +1,47 @@
 <?php 
+if(!session_id()) {
+        session_start();
+}
+$api_key= "" ;
 
-$api_key= "AIzaSyB7gXCJhkTQWlzO21MVKd0umdSND4BiEAY" ;
 $source = "zh-TW"; 
 $target =  "en" ; 
 
 
+if (isset($_POST['old_lan'])) {
+	$source = $_POST['old_lan']; 
+}
+if (isset($_POST['new_lan'])) {
+	$target = $_POST['new_lan']; 
+}
 
-   if(!session_id()) {
-        session_start();
-    }
- 
 require( dirname( __FILE__ ) . '../../../../wp-blog-header.php' );
+global $wpdb;
+
+
+//quota handle move to  clone-and_translate-post.php 
+/*   
+$api_key_url ="https://wa.hauchat.com/livecam/get_translate_api_key.php" ; 
+$api_key= get_option('google-translate-api-key');
+if ($api_key=="" || $api_key==false) {
+	$response =  wp_remote_get($api_key_url);
+	if ( is_array( $response ) ) {
+			$api_key = $response['body'];
+	}
+}
+
+if ($api_key=="out of quota") {
+	echo "out of quota" ;
+	exit; 
+}
+*/ 
 
 
 //echo  $_SESSION['catp_post_id']."<br>" .  $_SESSION['catp_post_title'] . "<br>" . $_SESSION['catp_post_content'] ; 
 
 //$url = "http://www.google.com/" ;
 
-
-
-$url = "https://www.googleapis.com/language/translate/v2?key=AIzaSyB7gXCJhkTQWlzO21MVKd0umdSND4BiEAY&source=zh-TW&target=en&q=" ; 
+//$url = "https://www.googleapis.com/language/translate/v2?key=" . $api_key . "&source=zh-TW&target=en&q=" ; 
 
 
 $catp_post_id =  $_SESSION['catp_post_id'] ; 
@@ -39,7 +61,7 @@ $url ="https://www.googleapis.com/language/translate/v2?key=" . $api_key . "&sou
 
 
 
-global $wpdb;
+
 $baboo= $wpdb->get_var("SELECT post_content FROM wp_posts WHERE ID = " . $catp_post_id );
 //echo $baboo;
 
@@ -72,6 +94,11 @@ $catp_content = $catp_content. "中國人中國人中國人中國人中國人中
 
 
 
+/*
+foreach($myOptions as $option => $value) {
+	echo $option . " => " . $value . "<br />";
+}
+*/
 
 $catp_content_length = mb_strlen($catp_content)  ; 
 echo   "catp_content_length=" . $catp_content_length . "<br>" ;
@@ -146,7 +173,6 @@ add_action('init','so46492768_insert_post');
 
     // Insert the post into the database
     wp_insert_post( $my_post );
-
 //echo $new_content ; 
 
 
