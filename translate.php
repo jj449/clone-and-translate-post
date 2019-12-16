@@ -68,40 +68,8 @@ $baboo= $wpdb->get_var("SELECT post_content FROM wp_posts WHERE ID = " . $catp_p
 $catp_content = $baboo ; 
 //$catp_content = str_replace("&nbsp;","",$catp_content);
 
-/*
-$catp_content = "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人&nbsp;" ;
-
-
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-$catp_content = $catp_content. "中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人中國人" ;
-*/
-
-//echo $catp_content; 
-//echo mb_strlen($catp_content)  ; 
-
-
-
-
-
-/*
-foreach($myOptions as $option => $value) {
-	echo $option . " => " . $value . "<br />";
-}
-*/
-
 $catp_content_length = mb_strlen($catp_content)  ; 
-echo   "catp_content_length=" . $catp_content_length . "<br>" ;
+//echo   "catp_content_length=" . $catp_content_length . "<br>" ;
 $sub_length = 1000 ; 
 $sub_start =0 ;
 
@@ -115,7 +83,7 @@ while ($sub_start < $catp_content_length) {
 		//echo $this_content;
 	}
 	//$this_content  = html_entity_decode($this_content ) ; 
-	echo $this_content;
+	//echo $this_content;
 	$this_content  = rawurlencode($this_content ) ; 
 	
 	
@@ -135,32 +103,11 @@ while ($sub_start < $catp_content_length) {
 	}
 
 	$sub_start = $sub_start + $sub_length ;
-	echo "run ="  . $sub_start;
+	//echo "run ="  . $sub_start;
 	sleep(1);
 }
 
-echo $new_content ; 
-/*
-function so46492768_insert_post() {
-    $postContent = 'test post';
-    $title = 'test title';
-
-    // Create post object
-    $my_post = array(
-        'post_title'    => $catp_title,
-        'post_content'  => $new_content,
-        'post_status'   => 'publish',
-        'post_author'   => 1,
-        'post_category' => 'uncategorized'
-    );
-
-    // Insert the post into the database
-    wp_insert_post( $my_post );
-
-    echo 'At least the code executed :/';
-}
-add_action('init','so46492768_insert_post');
-*/
+//echo $new_content ; 
 
 
  $my_post = array(
@@ -173,15 +120,6 @@ add_action('init','so46492768_insert_post');
 
     // Insert the post into the database
     wp_insert_post( $my_post );
-//echo $new_content ; 
-
-
-//$url = html_entity_decode ($url) ;
-
-//echo file_get_contents($url) ;
-
-//$response = wp_remote_get($url);
-
 
 
 
