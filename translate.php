@@ -37,13 +37,6 @@ if ($api_key=="out of quota") {
 */ 
 
 
-//echo  $_SESSION['catp_post_id']."<br>" .  $_SESSION['catp_post_title'] . "<br>" . $_SESSION['catp_post_content'] ; 
-
-//$url = "http://www.google.com/" ;
-
-//$url = "https://www.googleapis.com/language/translate/v2?key=" . $api_key . "&source=zh-TW&target=en&q=" ; 
-
-
 $catp_post_id =  $_SESSION['catp_post_id'] ; 
 $catp_title = $_SESSION['catp_post_title'] ; 
 //$catp_title = str_replace("&nbsp;","",$catp_title);
@@ -57,10 +50,6 @@ $url ="https://www.googleapis.com/language/translate/v2?key=" . $api_key . "&sou
 		$translated_txt = $translated_txt['data']['translations'][0]['translatedText'];
 		$catp_title =  $translated_txt; 
 	}
-
-
-
-
 
 $baboo= $wpdb->get_var("SELECT post_content FROM wp_posts WHERE ID = " . $catp_post_id );
 //echo $baboo;
