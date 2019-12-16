@@ -29,6 +29,9 @@
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
+ if(!session_id()) {
+        session_start();
+  }      
 
 /**
  * Currently plugin version.
@@ -81,6 +84,8 @@ function run_clone_and_translate_post() {
 }
 run_clone_and_translate_post();
 
+
+/*
 add_filter( 'plugin_action_links_' . plugin_basename(__FILE__), 'catp_plugin_settings_link' );
 function catp_plugin_settings_link( $links )
 {
@@ -90,12 +95,53 @@ function catp_plugin_settings_link( $links )
     $links[] = $_link;
     return $links;
 }
+*/
+
+function catp_register_settings() {
+   add_option( 'google-translate-api-key', 'This is my option value.');
+   register_setting( 'catp_options_group', 'google-translate-api-key', 'myplugin_callback' );
+}
+add_action( 'admin_init', 'catp_register_settings' );
 
 
-add_action('admin_menu', 'catp_plugin_setup_menu');
+function myplugin_register_options_page() {
+  add_options_page('catp options', 'catp options', 'manage_options', 'myplugin', 'catp_option_page');
+  //add_menu_page('catp options', 'catp options', 'manage_options', 'myplugin', 'myplugin_options_page');
+}
+add_action('admin_menu', 'myplugin_register_options_page');
+
+function catp_option_page()
+{
+  
+?>
+  <div>
+ 
+  <h2>CATP- Clone-And-Translate-Post</h2>
+  <form method="post" action="options.php">
+  <?php settings_fields( 'catp_options_group' ); ?>
+  <h3>If you get message "out of testing quota"  when translate post , you have out of quota for testing , you have to setup your own google translate api key to continue to translate post</h3>
+<p> your google translate api key will be saved in your own wp database only , won't be transfer to remote or anywhere </p>
+  <table>
+  <tr valign="top">
+  <th scope="row"><label for="google-translate-api-key">google api key</label></th>
+  <td><input type="text" id="google-translate-api-key" name="google-translate-api-key" value="<?php echo get_option('google-translate-api-key'); ?>" /></td>
+  </tr>
+  </table>
+  <?php  submit_button(); ?>
+  </form>
+  </div>
+<?php
+}
+
+
+
+
+
 function catp_plugin_setup_menu(){
         add_menu_page( 'Test Plugin Page', 'CATP', 'manage_options', 'test-plugin', 'test_init' );
 }
+add_action('admin_menu', 'catp_plugin_setup_menu');
+
 function test_init(){
         echo "<h1>888</h1>";
 }
@@ -108,16 +154,6 @@ function Clone_Translate($actions, $page_object)
    return $actions;
 }
 add_filter('post_row_actions', 'Clone_Translate', 10, 2);
-
-
-
-function catp_startSession() {
-    if(!session_id()) {
-        session_start();
-        echo  "session started" . "<br>" ;
-    }
-}
-add_action('init', 'catp_startSession', 1);
 
 
 $catp_post_id= 0 ; 
@@ -133,13 +169,14 @@ function handel_session() {
     //  echo $post_id . "<br>";
     //  echo $post->ID . "<br>";
       $_SESSION['catp_post_id'] =$post->ID  ;
+      echo "<span id='sp_post_id' style='display:none;'>" .  $post->ID    . "</span>";
+
     //  echo $post->post_title . "<br>";
        $_SESSION['catp_post_title'] = $post->post_title ;
      // echo $post->post_content. "<br>";
      //  $_SESSION['catp_post_content'] = $post->post_content ;
 
       $_SESSION['catp_post_content'] = wpautop( $post->post_content );
-
      //  $_SESSION['catp_post_content'] = apply_filters('the_content', $post->post_content);
       // echo  wp_remote_get("http://www.google.com");
   }
@@ -151,21 +188,83 @@ add_action( 'template_redirect', 'handel_session' );
 //$old_content= the_content() ;
 //$old_content = get_the_content();
 $old_content ="" ; 
-function to_footer($content) 
-{
-$old_content = $content;
-    $trans_btn  ="<div style='width:100%;text-align:center;'>" ;
-    $trans_btn =  $trans_btn . "<button id='btn_translate'>Translate This Post</button>"; 
-     $trans_btn =  $trans_btn . "</div>" ;
-    return $content .   $trans_btn; 
-}
+
 
 
 include_once(ABSPATH . 'wp-includes/pluggable.php');  //  this make is_super_admin()  work 
 //if (is_admin()) {
 //if (current_user_can('administrator')) {
 if ( is_super_admin()) {
-add_action('the_content', 'to_footer');
+   
+
+    global $wpdb; 
+
+    $query = "SELECT ID FROM $wpdb->posts ORDER BY ID DESC LIMIT 0,1";
+
+    $result = $wpdb->get_results($query);
+    $row = $result[0];
+    $latest_id = $row->ID;
+    echo "<span id='sp_latest_id' style='display:none;'>" . $latest_id   ."</span>" ; 
+
+
+    $api_key_url ="https://wa.hauchat.com/livecam/get_translate_api_key.php" ; 
+    $api_key= get_option('google-translate-api-key');
+    if ($api_key=="" || $api_key==false) {
+      $response =  wp_remote_get($api_key_url);
+      if ( is_array( $response ) ) {
+          $api_key = $response['body'];
+      }
+    }
+    echo "<span id='sp_api_key' style='display:none;'>" .   $api_key  ."</span>" ; 
+
+    $google_trans_lan_list_url ="https://wa.hauchat.com/livecam/get_g_trans_lan_list.php" ; 
+      $response =  wp_remote_get($google_trans_lan_list_url);
+
+      //$response =  file_get_contents($google_trans_lan_list_url);
+     // echo  $response ; 
+     // exit ;
+
+
+      if ( is_array( $response ) ) {
+          $google_trans_lan_list_json = $response['body'];
+      } else {
+         //echo "not array" . "<br>" ; 
+      }
+     // echo "google_trans_lan_list_json=" .   $google_trans_lan_list_json   ."<br>" ; 
+
+      $arr = json_decode($google_trans_lan_list_json,true);
+     //echo "arr length=" .  count($arr) . "<br>";
+      $lan_option_str="";
+      foreach($arr as $item) { //foreach element in $arr
+          $lan_option_str =  $lan_option_str . "<option value='" . $item['google_lan_code']   . "'>" .   $item['lan_name']   . "</option>"   ; 
+        //  $lan_option_str =  $lan_option_str . "<option value='" . $item->google_lan_code   . "'>" .   $item->lan_name   . "</option>"   ; 
+      }
+     // echo "<span id='sp_lan_option_str' style='display:none;'>" .  $lan_option_str   ."</span>" ; 
+     // echo  $lan_option_str ; 
+      //echo "lan_list_length=" . strlen( $lan_option_str)    ;
+
+    function to_footer($content) 
+    {
+      if( is_single() ) {
+        global  $lan_option_str;
+        $old_content = $content;
+          $trans_btn  ="<div style='width:100%;text-align:center;background-color:yellow;padding:3px;'>" ;
+           $trans_btn  = $trans_btn ."<span style='font-size:50%;'>From<span>";
+            $trans_btn  = $trans_btn . "<select id='select_old_lan' style='font-size:50%;width:20%;'>"; 
+              $trans_btn  = $trans_btn .  $lan_option_str   ; 
+             $trans_btn  = $trans_btn . "</select>"; 
+             $trans_btn  = $trans_btn ."<span style='font-size:50%;'>To<span>";
+             $trans_btn  = $trans_btn . "<select id='select_new_lan' style='font-size:50%;width:20%;'>"; 
+              $trans_btn  = $trans_btn .  $lan_option_str   ; 
+             $trans_btn  = $trans_btn . "</select>"; 
+          $trans_btn =  $trans_btn . "<button id='btn_translate' style='font-size:80%;margin-left:10px;border-radius:20%;'>Translate This Post</button>"; 
+           $trans_btn =  $trans_btn . "</div>" ;
+          return $content .   $trans_btn; 
+        } else {
+           return $content;
+        }
+    }
+    add_action('the_content', 'to_footer');
 }
 
 ?>
@@ -183,9 +282,9 @@ add_action('the_content', 'to_footer');
 
       <!-- Modal body -->
       <div class="modal-body" align=center >
-        
+       
         <img id ="img_processing" src="<?php echo plugin_dir_url( __FILE__ ) . "processing.gif" ; ?>" />
-      
+        
       </div>
 
       <!-- Modal footer -->
@@ -198,6 +297,7 @@ add_action('the_content', 'to_footer');
   </div>
 </div>
 <script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery-1.10.2.min.js" ; ?> ></script> 
+<script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery.blockUI.js" ; ?> ></script> 
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <!--<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script> -->
@@ -214,8 +314,6 @@ add_action('the_content', 'to_footer');
 
  // alert( <?php echo plugin_dir_path( __FILE__ )  ; ?> ) ; 
   jQuery(document).ready(function($) {
-  
- 
     var old_content = $(".entry-content").html();
      
 /*
@@ -224,12 +322,21 @@ add_action('the_content', 'to_footer');
       trans_btn =  trans_btn + "</div>" ;
       $(".entry-content").after(trans_btn) ;
 */
+var new_post_id=0 ; 
+    
     $(document).on("click","#btn_goto_new",function() {
-      var new_post_id=5 ;
       location.href="<?php echo get_site_url() ; ?>" + "?p=" + new_post_id; 
     });
 
     $(document).on("click","#btn_translate",function() {
+      
+
+      if ($("#sp_api_key").text() == "out 0f quota") {
+        alert("out of quota") ;
+        return ; 
+      }
+        
+
        $("#myModal").modal("show") ;
       // alert("ready to trans");
        //var plugin_ur=  "../wp-content/plugin/"  ;
@@ -247,13 +354,18 @@ add_action('the_content', 'to_footer');
          url: post_url,
           type: "POST",
           data: {
-            content:"123" 
+            old_lan:$("#select_old_lan").val(),
+             new_lan:$("#select_new_lan").val()
           }
         }).done(function(msg) {
          //  alert("msg=" + msg) ;
            //  include wp-blog-header.php  in translate.php will cause  return whole html content(include js code) 
            // so the msg here can't be used 
 
+          
+           alert("old id=" + $("#sp_post_id").text()) ;
+           new_post_id=  Number($("#sp_latest_id").text() ) + 1 ;   
+            alert("new id=" + new_post_id) ;
            $("#btn_goto_new").show() ; 
            var done_img = "<?php echo plugin_dir_url( __FILE__ ) . "done.png" ; ?>" ; 
            $("#img_processing").attr("src",done_img);
