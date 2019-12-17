@@ -265,7 +265,7 @@ function catp_option_page()
   <form method="post" action="options.php">
   <?php settings_fields( 'catp_options_group' ); ?>
   <h3>If you get message "out of testing quota"  when translate post , you have out of quota for testing , you have to setup your own google translate api key to continue to translate post</h3>
-<p> your google translate api key will be saved in your own wp database only , won't be transfer to remote or anywhere </p>
+<p> your google translate api key will be saved in your own wp database only , won't be transfered to remote or anywhere </p>
   <table>
   <tr valign="top">
   <th scope="row"><label for="google-translate-api-key">google api key</label></th>
