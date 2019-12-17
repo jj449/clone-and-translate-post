@@ -2,7 +2,21 @@
 if(!session_id()) {
         session_start();
 }
-$api_key= "" ;
+
+$api_key ="";
+
+if (isset($_POST['api_key'])) {
+	$api_key = $_POST['api_key']; 
+} 
+
+if (isset($_GET['api_key'])) {
+	$api_key = $_GET['api_key']; 
+} 
+
+if ($api_key =="") {
+	exit;
+}
+
 
 $source = "zh-TW"; 
 $target =  "en" ; 
@@ -15,7 +29,7 @@ if (isset($_POST['new_lan'])) {
 	$target = $_POST['new_lan']; 
 }
 
-require( dirname( __FILE__ ) . '../../../../wp-blog-header.php' );
+require_once( dirname( __FILE__ ) . '../../../../wp-blog-header.php' );
 global $wpdb;
 
 
@@ -38,7 +52,9 @@ if ($api_key=="out of quota") {
 
 
 $catp_post_id =  $_SESSION['catp_post_id'] ; 
+//echo $catp_post_id  ."<br>";
 $catp_title = $_SESSION['catp_post_title'] ; 
+//echo $catp_title  ."<br>";
 //$catp_title = str_replace("&nbsp;","",$catp_title);
 
 $url ="https://www.googleapis.com/language/translate/v2?key=" . $api_key . "&source=" .$source ."&target=" .$target  . "&q=" ;

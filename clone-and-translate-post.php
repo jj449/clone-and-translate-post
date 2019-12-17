@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The plugin bootstrap file
  *
@@ -24,14 +23,13 @@
  * Text Domain:       clone-and-translate-post
  * Domain Path:       /languages
  */
-
 // If this file is called directly, abort.
 if ( ! defined( 'WPINC' ) ) {
 	die;
 }
- if(!session_id()) {
+if(!session_id()) {
         session_start();
-  }      
+}      
 
 /**
  * Currently plugin version.
@@ -97,6 +95,154 @@ function catp_plugin_settings_link( $links )
 }
 */
 
+
+
+
+function Clone_Translate($actions, $page_object)
+{
+   $actions['google_link'] = '<a href="http://google.com/search?q=' . $page_object->post_title . '" class="google_link">' . __('Clone&Translate') . '</a>';
+    echo "<script> alert('search google');</script>" ;
+   return $actions;
+}
+add_filter('post_row_actions', 'Clone_Translate', 10, 2);
+
+
+$catp_post_id= 0 ; 
+$catp_post_title= "" ; 
+$catp_post_content= "" ; 
+
+function handel_session() {
+    $queried_object = get_queried_object();
+
+  if ( $queried_object ) {
+   // echo "queried_object";
+    global $post , $catp_post_id,$catp_post_title,$catp_post_content ; 
+      $post_id = $queried_object->ID;
+    //  echo $post_id . "<br>";
+    //  echo $post->ID . "<br>";
+      $_SESSION['catp_post_id'] =$post->ID  ;
+    //  echo "<span id='sp_post_id' style='display:none;'>" .  $post->ID    . "</span>";
+    //  echo $post->post_title . "<br>";
+       $_SESSION['catp_post_title'] = $post->post_title ;
+     // echo $post->post_content. "<br>";
+     //  $_SESSION['catp_post_content'] = $post->post_content ;
+
+      $_SESSION['catp_post_content'] = wpautop( $post->post_content );
+     //  $_SESSION['catp_post_content'] = apply_filters('the_content', $post->post_content);
+      
+  }
+
+}
+add_action( 'template_redirect', 'handel_session' );
+//add_action( 'wp_head', 'handel_session' );
+
+
+//$old_content= the_content() ;
+//$old_content = get_the_content();
+$old_content ="" ; 
+
+//include_once(ABSPATH . 'wp-includes/pluggable.php');  //  this make is_super_admin()  work 
+//if (is_admin()) {
+//if (current_user_can('administrator')) {
+
+$lan_option_str="";
+
+
+add_action( 'plugins_loaded', 'catp_admin123_action' );
+function catp_admin123_action() {
+  global $lan_option_str ; 
+if ( is_super_admin()) {
+    global $wpdb; 
+
+    $query = "SELECT ID FROM $wpdb->posts ORDER BY ID DESC LIMIT 0,1";
+
+    $result = $wpdb->get_results($query);
+    $row = $result[0];
+    $latest_id = $row->ID;
+    echo "<span id='sp_latest_id' style='display:none !important;'>" . $latest_id   ."</span>" ; 
+
+    $api_key= get_option('google-translate-api-key');
+    if ($api_key=="" || $api_key==false) {
+          $api_key = "there is no api key";
+    }
+    echo "<span id='sp_api_key' style='display:none;'>" .   $api_key  ."</span>" ; 
+    //change json source from url to file  
+    //  $google_trans_lan_list_json =  file_get_contents(ABSPATH . 'wp-content/plugins/clone-and-translate-post/google_lan_code_list.json') ; 
+       $google_trans_lan_list_json =  file_get_contents( plugin_dir_url( __FILE__ ) . 'google_lan_code_list.json') ;
+
+      /*  
+       $google_trans_lan_list_url ="https://wa.hauchat.com/livecam/get_g_trans_lan_list.php" ; 
+      $response =  wp_remote_get($google_trans_lan_list_url);
+      $response =  file_get_contents($google_trans_lan_list_url);
+      if ( is_array( $response ) ) {
+          $google_trans_lan_list_json = $response['body'];
+      } else {
+         //echo "not array" . "<br>" ; 
+      }
+      */
+
+      $arr = json_decode($google_trans_lan_list_json,true);
+     //echo "arr length=" .  count($arr) . "<br>";
+      
+      foreach($arr as $item) { //foreach element in $arr
+          $lan_option_str =  $lan_option_str . "<option value='" . $item['google_lan_code']   . "'>" .   $item['lan_name']   . "</option>"   ; 
+        //  $lan_option_str =  $lan_option_str . "<option value='" . $item->google_lan_code   . "'>" .   $item->lan_name   . "</option>"   ; 
+      }
+     // echo "<span id='sp_lan_option_str' style='display:none;'>" .  $lan_option_str   ."</span>" ; 
+      //echo  $lan_option_str ; 
+      //echo "lan_list_length=" . strlen( $lan_option_str)    ;
+
+    function to_footer($content) {
+       global  $lan_option_str;
+      if( is_single() ) {
+        $old_content = $content;
+          $trans_btn  ="<div style='width:100%;text-align:center;background-color:yellow;padding:3px;'>" ;
+           $trans_btn  = $trans_btn ."<span style='font-size:50%;'>From<span>";
+            $trans_btn  = $trans_btn . "<select id='select_old_lan' style='font-size:50%;width:20%;'>"; 
+              $trans_btn  = $trans_btn .  $lan_option_str   ; 
+             $trans_btn  = $trans_btn . "</select>"; 
+             $trans_btn  = $trans_btn ."<span style='font-size:50%;'>To<span>";
+             $trans_btn  = $trans_btn . "<select id='select_new_lan' style='font-size:50%;width:20%;'>"; 
+              $trans_btn  = $trans_btn .  $lan_option_str   ; 
+             $trans_btn  = $trans_btn . "</select>"; 
+          $trans_btn =  $trans_btn . "<button id='btn_translate' style='font-size:80%;margin-left:10px;border-radius:20%;'>Translate This Post</button>"; 
+
+          return $content .   $trans_btn; 
+        } else {
+           return $content;
+        }
+    }
+    add_action('the_content', 'to_footer');
+
+    function output_html_modal() {
+      echo '<div class="modal" id="myModal"> ' ; 
+      echo '    <div class="modal-dialog">';
+      echo '      <div class="modal-content">';
+      echo '        <!-- Modal Header -->';
+      echo '        <div class="modal-header">';
+      echo '          <h4 class="modal-title">Processing ... </h4>';
+      echo '          <button type="button" class="close" data-dismiss="modal">&times;</button>';
+      echo '        </div>';
+      echo '        <!-- Modal body -->';
+      echo '        <div class="modal-body" align=center >';
+      echo '          <img id ="img_processing" src="' ;
+      echo plugin_dir_url( __FILE__ ) . "processing.gif" ;
+      echo '"/>';
+      echo '        </div>';
+      echo '        <!-- Modal footer -->';
+      echo '        <div class="modal-footer">';
+      echo '          <button type="button" id="btn_goto_new" class="btn btn-primary" data-dismiss="modal" style="display:none;">done ! go to check new post !</button>';
+      echo '          <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>';
+      echo '        </div>';
+      echo '      </div>';
+      echo '    </div>';
+      echo '</div>';
+    }
+    add_action( 'wp_head', 'output_html_modal' );
+  }
+}  
+?>
+<?php
 function catp_register_settings() {
    add_option( 'google-translate-api-key', 'This is my option value.');
    register_setting( 'catp_options_group', 'google-translate-api-key', 'myplugin_callback' );
@@ -112,7 +258,6 @@ add_action('admin_menu', 'myplugin_register_options_page');
 
 function catp_option_page()
 {
-  
 ?>
   <div>
  
@@ -133,10 +278,6 @@ function catp_option_page()
 <?php
 }
 
-
-
-
-
 function catp_plugin_setup_menu(){
         add_menu_page( 'Test Plugin Page', 'CATP', 'manage_options', 'test-plugin', 'test_init' );
 }
@@ -147,173 +288,15 @@ function test_init(){
 }
 
 
-function Clone_Translate($actions, $page_object)
-{
-   $actions['google_link'] = '<a href="http://google.com/search?q=' . $page_object->post_title . '" class="google_link">' . __('Clone&Translate') . '</a>';
-    echo "<script> alert('search google');</script>" ;
-   return $actions;
-}
-add_filter('post_row_actions', 'Clone_Translate', 10, 2);
-
-
-$catp_post_id= 0 ; 
-$catp_post_title= "" ; 
-$catp_post_content= "" ; 
-
-function handel_session() {
-    $queried_object = get_queried_object();
-
-  if ( $queried_object ) {
-    global $post , $catp_post_id,$catp_post_title,$catp_post_content ; 
-      $post_id = $queried_object->ID;
-    //  echo $post_id . "<br>";
-    //  echo $post->ID . "<br>";
-      $_SESSION['catp_post_id'] =$post->ID  ;
-      echo "<span id='sp_post_id' style='display:none;'>" .  $post->ID    . "</span>";
-
-    //  echo $post->post_title . "<br>";
-       $_SESSION['catp_post_title'] = $post->post_title ;
-     // echo $post->post_content. "<br>";
-     //  $_SESSION['catp_post_content'] = $post->post_content ;
-
-      $_SESSION['catp_post_content'] = wpautop( $post->post_content );
-     //  $_SESSION['catp_post_content'] = apply_filters('the_content', $post->post_content);
-      // echo  wp_remote_get("http://www.google.com");
-  }
-
-}
-add_action( 'template_redirect', 'handel_session' );
-
-
-//$old_content= the_content() ;
-//$old_content = get_the_content();
-$old_content ="" ; 
-
-
-
-include_once(ABSPATH . 'wp-includes/pluggable.php');  //  this make is_super_admin()  work 
-//if (is_admin()) {
-//if (current_user_can('administrator')) {
-if ( is_super_admin()) {
-   
-
-    global $wpdb; 
-
-    $query = "SELECT ID FROM $wpdb->posts ORDER BY ID DESC LIMIT 0,1";
-
-    $result = $wpdb->get_results($query);
-    $row = $result[0];
-    $latest_id = $row->ID;
-    echo "<span id='sp_latest_id' style='display:none;'>" . $latest_id   ."</span>" ; 
-
-
-    $api_key_url ="https://wa.hauchat.com/livecam/get_translate_api_key.php" ; 
-    $api_key= get_option('google-translate-api-key');
-    if ($api_key=="" || $api_key==false) {
-      $response =  wp_remote_get($api_key_url);
-      if ( is_array( $response ) ) {
-          $api_key = $response['body'];
-      }
-    }
-    echo "<span id='sp_api_key' style='display:none;'>" .   $api_key  ."</span>" ; 
-
-    //change json source from url to file  
-       $google_trans_lan_list_json =  file_get_contents(ABSPATH . 'wp-content/plugins/clone-and-translate-post/google_lan_code_list.json') ; 
-
-      
-      /*  
-       $google_trans_lan_list_url ="https://wa.hauchat.com/livecam/get_g_trans_lan_list.php" ; 
-      $response =  wp_remote_get($google_trans_lan_list_url);
-      $response =  file_get_contents($google_trans_lan_list_url);
-      if ( is_array( $response ) ) {
-          $google_trans_lan_list_json = $response['body'];
-      } else {
-         //echo "not array" . "<br>" ; 
-      }
-      */
-     
-
-      $arr = json_decode($google_trans_lan_list_json,true);
-     //echo "arr length=" .  count($arr) . "<br>";
-      $lan_option_str="";
-      foreach($arr as $item) { //foreach element in $arr
-          $lan_option_str =  $lan_option_str . "<option value='" . $item['google_lan_code']   . "'>" .   $item['lan_name']   . "</option>"   ; 
-        //  $lan_option_str =  $lan_option_str . "<option value='" . $item->google_lan_code   . "'>" .   $item->lan_name   . "</option>"   ; 
-      }
-     // echo "<span id='sp_lan_option_str' style='display:none;'>" .  $lan_option_str   ."</span>" ; 
-     // echo  $lan_option_str ; 
-      //echo "lan_list_length=" . strlen( $lan_option_str)    ;
-
-    function to_footer($content) 
-    {
-      if( is_single() ) {
-        global  $lan_option_str;
-        $old_content = $content;
-          $trans_btn  ="<div style='width:100%;text-align:center;background-color:yellow;padding:3px;'>" ;
-           $trans_btn  = $trans_btn ."<span style='font-size:50%;'>From<span>";
-            $trans_btn  = $trans_btn . "<select id='select_old_lan' style='font-size:50%;width:20%;'>"; 
-              $trans_btn  = $trans_btn .  $lan_option_str   ; 
-             $trans_btn  = $trans_btn . "</select>"; 
-             $trans_btn  = $trans_btn ."<span style='font-size:50%;'>To<span>";
-             $trans_btn  = $trans_btn . "<select id='select_new_lan' style='font-size:50%;width:20%;'>"; 
-              $trans_btn  = $trans_btn .  $lan_option_str   ; 
-             $trans_btn  = $trans_btn . "</select>"; 
-          $trans_btn =  $trans_btn . "<button id='btn_translate' style='font-size:80%;margin-left:10px;border-radius:20%;'>Translate This Post</button>"; 
-           $trans_btn =  $trans_btn . "</div>" ;
-          return $content .   $trans_btn; 
-        } else {
-           return $content;
-        }
-    }
-    add_action('the_content', 'to_footer');
-}
-
 ?>
-
-
-<div class="modal" id="myModal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-
-      <!-- Modal Header -->
-      <div class="modal-header">
-        <h4 class="modal-title">Processing ... </h4>
-        <button type="button" class="close" data-dismiss="modal">&times;</button>
-      </div>
-
-      <!-- Modal body -->
-      <div class="modal-body" align=center >
-       
-        <img id ="img_processing" src="<?php echo plugin_dir_url( __FILE__ ) . "processing.gif" ; ?>" />
-        
-      </div>
-
-      <!-- Modal footer -->
-      <div class="modal-footer">
-        <button type="button" id="btn_goto_new" class="btn btn-primary" data-dismiss="modal" style="display:none;">done ! go to check new post !</button>
-        <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
-      </div>
-
-    </div>
-  </div>
-</div>
-<script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery-1.10.2.min.js" ; ?> ></script> 
-<script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery.blockUI.js" ; ?> ></script> 
+<script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery-1.10.2.min.js" ;?>></script> 
+<script type="text/javascript" src= <?php echo plugin_dir_url( __FILE__ ) . "public/js/jquery.blockUI.js" ;?>></script> 
 
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 <!--<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script> -->
 <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
-
-
-<!--<script type="text/javascript" src="../wp-content/plugins/clone-and-translate-post/public/js/jquery-1.10.2.min.js"></script>-->
-
-
-
 <script>
- // alert("WOOOOOOOO");
-
- // alert( <?php echo plugin_dir_path( __FILE__ )  ; ?> ) ; 
   jQuery(document).ready(function($) {
     var old_content = $(".entry-content").html();
      
@@ -330,10 +313,9 @@ var new_post_id=0 ;
     });
 
     $(document).on("click","#btn_translate",function() {
-      
-
-      if ($("#sp_api_key").text() == "out 0f quota") {
-        alert("out of quota") ;
+      if ($("#sp_api_key").text() == "there is no api key") {
+        alert("You have to setup your own google api key to translate") ;
+        //$("dv_msg").html("You have to setup your own google api key to translate") ; 
         return ; 
       }
         
@@ -356,7 +338,8 @@ var new_post_id=0 ;
           type: "POST",
           data: {
             old_lan:$("#select_old_lan").val(),
-             new_lan:$("#select_new_lan").val()
+             new_lan:$("#select_new_lan").val(),
+             api_key:$("#sp_api_key").text()
           }
         }).done(function(msg) {
          //  alert("msg=" + msg) ;
@@ -366,35 +349,13 @@ var new_post_id=0 ;
           
          //  alert("old id=" + $("#sp_post_id").text()) ;
            new_post_id=  Number($("#sp_latest_id").text() ) + 1 ;   
+           //alert("new id=" + new_post_id) ; 
            // alert("new id=" + new_post_id) ;
            $("#btn_goto_new").show() ; 
            var done_img = "<?php echo plugin_dir_url( __FILE__ ) . "done.png" ; ?>" ; 
            $("#img_processing").attr("src",done_img);
 
         });
-       
   }) ; 
 });
- 
 </script>
-
-
-<?php
-
-
-/*
-add_filter( 'plugin_row_meta','my_plugin_row_meta', 10, 2 );
-function my_plugin_row_meta( $actions, $plugin_file ) {
-
- $action_links = array(
-                        
-   'donate' => array(
-      'label' => __('Donate', 'my_domain'),
-      'url'   => 'http://www.my-plugins-site.com/donate'
-    ));
-
-  return plugin_action_links( $actions, $plugin_file, $action_links, 'after');
-}
-*/
-
-
