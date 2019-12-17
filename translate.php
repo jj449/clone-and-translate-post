@@ -33,22 +33,6 @@ require_once( dirname( __FILE__ ) . '../../../../wp-blog-header.php' );
 global $wpdb;
 
 
-//quota handle move to  clone-and_translate-post.php 
-/*   
-$api_key_url ="https://wa.hauchat.com/livecam/get_translate_api_key.php" ; 
-$api_key= get_option('google-translate-api-key');
-if ($api_key=="" || $api_key==false) {
-	$response =  wp_remote_get($api_key_url);
-	if ( is_array( $response ) ) {
-			$api_key = $response['body'];
-	}
-}
-
-if ($api_key=="out of quota") {
-	echo "out of quota" ;
-	exit; 
-}
-*/ 
 
 
 $catp_post_id =  $_SESSION['catp_post_id'] ; 
