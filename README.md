@@ -1,7 +1,7 @@
 2019-12-18 :
 this plugin was rejected by wordpress plugin team, ref this mail : reject_1.pdf . 
 tho it's working ,but violats some rules of wrdpress plugin . will try to fix problems to re-submit later.
-At mean time , for dev purpose , you still can install this plugin manually , just download it and unzip , copy the whole plugin folder to wp-content/plugins/ . 
+At meantime , for dev purpose , you still can install this plugin manually , just download it and unzip , copy the whole plugin folder to wp-content/plugins/ . 
 
 # clone-and-translate-post
 a wordpress plugin
