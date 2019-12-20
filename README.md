@@ -1,4 +1,8 @@
+
 111
+
+***
+
 2019-12-18 :
 this plugin was rejected by wordpress plugin team, ref this mail : reject_1.pdf . 
 tho it's working ,but violats some rules of wrdpress plugin . will try to fix problems to re-submit later.
