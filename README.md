@@ -15,5 +15,5 @@ A simple post translating plugin.After installed, activate plugin , then go to [
 If you are insterested in improving this plugin , go to https://github.com/jj449/clone-and-translate-post , let's do it together.
 
 
-branch1 branch1
+
 
